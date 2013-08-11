@@ -116,7 +116,9 @@ char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
         systemRoot = "/system";
 
     if (dexRoot == NULL)
-        dexRoot = dataRoot;
+        dexRoot = dataRoot; 
+
+// put dalvik.vm.dexopt-data-only=1 in build.prop for boot
 
     /* Cache anything stored on /system in cacheRoot, everything else in dataRoot */
 #if 0
