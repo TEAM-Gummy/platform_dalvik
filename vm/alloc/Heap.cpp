@@ -30,20 +30,25 @@
 #include "alloc/MarkSweep.h"
 #include "os/os.h"
 
-#include <sys/time.h>
+#include <sys/mman.h>
 #include <sys/resource.h>
+#include <sys/time.h>
 #include <limits.h>
 #include <errno.h>
 
 #include <cutils/trace.h>
+#ifdef __BIONIC__
 #include <cutils/properties.h>
 
 static int debugalloc()
 {
     char value[PROPERTY_VALUE_MAX];
-    property_get("dalvik.vm.debug.alloc", value, "1");
+    property_get("dalvik.vm.debug.alloc", value, "0");
     return atoi(value);
 }
+#else
+inline static int debugalloc() { return 1; }
+#endif
 
 static const GcSpec kGcForMallocSpec = {
     true,  /* isPartial */

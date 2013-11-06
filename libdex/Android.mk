@@ -35,7 +35,6 @@ dex_src_files := \
 
 dex_include_files := \
 	dalvik \
-	$(JNI_H_INCLUDE) \
 	external/zlib \
 	external/safe-iop/include
 
@@ -47,9 +46,15 @@ dex_include_files := \
 ifneq ($(SDK_ONLY),true)  # SDK_only doesn't need device version
 
 include $(CLEAR_VARS)
+
+ifneq ($(TARGET_BUILD_VARIANT),user)
+LOCAL_CFLAGS += -DALLOW_DEXROOT_ON_CACHE
+endif
+
 #LOCAL_CFLAGS += -UNDEBUG -DDEBUG=1
 LOCAL_SRC_FILES := $(dex_src_files)
 LOCAL_C_INCLUDES += $(dex_include_files)
+LOCAL_STATIC_LIBRARIES := liblog
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdex
 include $(BUILD_STATIC_LIBRARY)
@@ -65,6 +70,7 @@ endif # !SDK_ONLY
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(dex_src_files) sha1.cpp
 LOCAL_C_INCLUDES += $(dex_include_files)
+LOCAL_STATIC_LIBRARIES := liblog
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libdex
 include $(BUILD_HOST_STATIC_LIBRARY)
