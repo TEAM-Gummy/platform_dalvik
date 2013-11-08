@@ -121,13 +121,11 @@ char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
 
 #ifdef ALLOW_DEXROOT_ON_CACHE
     if (dexRoot == NULL)
-        dexRoot = dataRoot; 
-
-// put dalvik.vm.dexopt-data-only=1 in build.prop for boot
+#endif
+        dexRoot = dataRoot;
 
 #ifdef ALLOW_DEXROOT_ON_CACHE
     /* Cache anything stored on /system in cacheRoot, everything else in dataRoot */
-#if 0
     if (!strncmp(absoluteFile, systemRoot, strlen(systemRoot))) {
         property_get("dalvik.vm.dexopt-data-only", dexoptDataOnly, "");
         if (strcmp(dexoptDataOnly, "1") != 0) {
