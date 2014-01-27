@@ -291,13 +291,15 @@ static int mountEmulatedStorage(uid_t uid, u4 mountMode) {
 
         if (mountMode == MOUNT_EXTERNAL_MULTIUSER_ALL) {
             // Mount entire external storage tree for all users
-            if (mount(source, target, NULL, MS_BIND, NULL) == -1) {
+            if (TEMP_FAILURE_RETRY(
+                    mount(source, target, NULL, MS_BIND, NULL)) == -1) {
                 ALOGE("Failed to mount %s to %s: %s", source, target, strerror(errno));
                 return -1;
             }
         } else {
             // Only mount user-specific external storage
-            if (mount(source_user, target_user, NULL, MS_BIND, NULL) == -1) {
+            if (TEMP_FAILURE_RETRY(
+                    mount(source_user, target_user, NULL, MS_BIND, NULL)) == -1) {
                 ALOGE("Failed to mount %s to %s: %s", source_user, target_user, strerror(errno));
                 return -1;
             }
@@ -308,7 +310,8 @@ static int mountEmulatedStorage(uid_t uid, u4 mountMode) {
         }
 
         // Finally, mount user-specific path into place for legacy users
-        if (mount(target_user, legacy, NULL, MS_BIND | MS_REC, NULL) == -1) {
+        if (TEMP_FAILURE_RETRY(
+                mount(target_user, legacy, NULL, MS_BIND | MS_REC, NULL)) == -1) {
             ALOGE("Failed to mount %s to %s: %s", target_user, legacy, strerror(errno));
             return -1;
         }
@@ -434,19 +437,21 @@ static int setCapabilities(int64_t permitted, int64_t effective)
 {
 #ifdef HAVE_ANDROID_OS
     struct __user_cap_header_struct capheader;
-    struct __user_cap_data_struct capdata;
+    struct __user_cap_data_struct capdata[_LINUX_CAPABILITY_U32S_3];
 
     memset(&capheader, 0, sizeof(capheader));
     memset(&capdata, 0, sizeof(capdata));
 
-    capheader.version = _LINUX_CAPABILITY_VERSION;
+    capheader.version = _LINUX_CAPABILITY_VERSION_3;
     capheader.pid = 0;
 
-    capdata.effective = effective;
-    capdata.permitted = permitted;
+    capdata[0].effective = effective & 0xffffffffULL;
+    capdata[0].permitted = permitted & 0xffffffffULL;
+    capdata[1].effective = (uint64_t)effective >> 32;
+    capdata[1].permitted = (uint64_t)permitted >> 32;
 
     ALOGV("CAPSET perm=%llx eff=%llx", permitted, effective);
-    if (capset(&capheader, &capdata) != 0)
+    if (capset(&capheader, capdata) != 0)
         return errno;
 #endif /*HAVE_ANDROID_OS*/
 
